@@ -7,6 +7,7 @@ const azureMapsKey =
 
 const CustomerDashboard = () => {
   const mapRef = useRef(null);
+  const markersRef = useRef([]); // To keep track of current markers
   const [searchPin, setSearchPin] = useState("");
   const [filteredStores, setFilteredStores] = useState(stores);
 
@@ -22,39 +23,52 @@ const CustomerDashboard = () => {
         },
       });
 
-      // Add markers for the stores
-      const markers = stores.map(
-        (store) =>
-          new atlas.HtmlMarker({
-            position: [store.longitude, store.latitude],
-            htmlContent: `<div class="pin"></div>`,
-          })
-      );
-
-      markers.forEach((marker) => map.markers.add(marker));
       mapRef.current = map;
+
+      // Initialize markers for all stores
+      updateMarkers(stores);
     }
   }, []);
+
+  const updateMarkers = (storeList) => {
+    if (mapRef.current) {
+      // Clear existing markers
+      markersRef.current.forEach((marker) =>
+        mapRef.current.markers.remove(marker)
+      );
+      markersRef.current = [];
+
+      // Add new markers for the filtered store list
+      storeList.forEach((store) => {
+        const marker = new atlas.HtmlMarker({
+          position: [store.longitude, store.latitude],
+          htmlContent: `<div class="pin" style="background: #0078D4; width: 10px; height: 10px; border-radius: 50%;"></div>`,
+        });
+
+        mapRef.current.markers.add(marker);
+        markersRef.current.push(marker);
+      });
+
+      // Adjust the map view to fit the markers
+      if (storeList.length > 0) {
+        const positions = storeList.map((store) => [
+          store.longitude,
+          store.latitude,
+        ]);
+        mapRef.current.setCamera({
+          bounds: atlas.data.BoundingBox.fromPositions(positions),
+          padding: 20,
+        });
+      }
+    }
+  };
 
   const handleSearch = () => {
     const results = stores.filter((store) =>
       store.pincode.startsWith(searchPin)
     );
     setFilteredStores(results);
-
-    // Update map markers based on search
-    if (mapRef.current) {
-      mapRef.current.markers.clear();
-
-      results.forEach((store) => {
-        const marker = new atlas.HtmlMarker({
-          position: [store.longitude, store.latitude],
-          htmlContent: `<div class="pin"></div>`,
-        });
-
-        mapRef.current.markers.add(marker);
-      });
-    }
+    updateMarkers(results); // Update markers on the map
   };
 
   return (
