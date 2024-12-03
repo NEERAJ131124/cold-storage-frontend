@@ -59,7 +59,7 @@ const LocationFetcher = () => {
         : ["hi"]; // Default to Hindi if no language found for the state
 
       setLanguageOptions([ "en",...availableLanguages]); // Ensure English is always an option
-      setSelectedLanguage(availableLanguages[0] || "en"); // Default to first available language
+      setSelectedLanguage("en"); // Default to first available language
     } catch (err) {
       setError("Error fetching supported languages: " + err.message);
       setLanguageOptions(["en"]); // Fallback to English
