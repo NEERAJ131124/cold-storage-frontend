@@ -4,6 +4,7 @@ import RegisterOwner from "../pages/owners-register/RegisterOwners";
 import RegisterCustomer from "../pages/customer-register/RegisterCustomer";
 import CustomerDashboard from "../pages/customer-dashboard/CustomerDashboard";
 import LocationFetcher from "../pages/location/LocationFetcher";
+import Home from "../pages/login/Login";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
   {
     path: "/customer-dashboard",
     element: <CustomerDashboard />,
+  },
+  {
+    path:"/home",
+    element:<Home/>
   },
   {
     path: "*",
