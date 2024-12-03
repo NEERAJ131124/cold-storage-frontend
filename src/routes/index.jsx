@@ -3,6 +3,7 @@ import LandingPage from "../pages/Landing/Landing";
 import RegisterOwner from "../pages/owners-register/RegisterOwners";
 import RegisterCustomer from "../pages/customer-register/RegisterCustomer";
 import CustomerDashboard from "../pages/customer-dashboard/CustomerDashboard";
+import LocationFetcher from "../pages/location/LocationFetcher";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
   {
     path: "/register-customer",
     element: <RegisterCustomer />,
+  },
+  {
+    path: "/location",
+    element: <LocationFetcher />,
   },
   // customer dashbaord
   {
