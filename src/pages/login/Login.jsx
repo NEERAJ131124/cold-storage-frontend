@@ -101,7 +101,7 @@ const Login = () => {
   useEffect(() => {
     // Check if `id_token` is present in the URL hash
     const urlParams = new URLSearchParams(window.location.hash.substring(1));
-    const idToken = urlParams.get("id_token");
+    const idToken = urlParams.get("id_token") ||  urlParams.get("code");
 
     if (idToken) {
       setToken(idToken);
