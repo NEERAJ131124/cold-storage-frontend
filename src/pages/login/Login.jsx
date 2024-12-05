@@ -104,12 +104,10 @@ const Login = () => {
     const idToken = urlParams.get("id_token");
 
     if (idToken) {
-      // If `id_token` is found, save it to the state and display it
       setToken(idToken);
     } else {
-      // If `id_token` is not found, redirect to the login page
       window.location.href =
-        "https://coldstorageb2c.b2clogin.com/coldstorageb2c.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_csui&client_id=372d3903-5a0e-401d-993c-129ffc634bc7&nonce=defaultNonce&redirect_uri=https%3A%2F%2Fvictorious-glacier-007ebea00.4.azurestaticapps.net%2Fhome&scope=openid&response_type=id_token&prompt=login";
+        "https://coldstorageb2c.b2clogin.com/coldstorageb2c.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_csui&client_id=372d3903-5a0e-401d-993c-129ffc634bc7&nonce=defaultNonce&redirect_uri=https%3A%2F%2Fvictorious-glacier-007ebea00.4.azurestaticapps.net%2Fdashboard&scope=openid&response_type=id_token&prompt=login";
     }
   }, []);
 
