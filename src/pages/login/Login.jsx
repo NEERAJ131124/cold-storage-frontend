@@ -93,15 +93,45 @@
 // export default Login;
 
 
-import React from 'react'
+import React, { useEffect, useState } from "react";
 
 const Login = () => {
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    // Check if `id_token` is present in the URL hash
+    const urlParams = new URLSearchParams(window.location.hash.substring(1));
+    const idToken = urlParams.get("id_token");
+
+    if (idToken) {
+      // If `id_token` is found, save it to the state and display it
+      setToken(idToken);
+    } else {
+      // If `id_token` is not found, redirect to the login page
+      window.location.href =
+        "https://coldstorageb2c.b2clogin.com/coldstorageb2c.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_cs&client_id=372d3903-5a0e-401d-993c-129ffc634bc7&nonce=defaultNonce&redirect_uri=https%3A%2F%2Fjwt.ms&scope=openid&response_type=id_token&prompt=login";
+    }
+  }, []);
+
   return (
     <div>
-      <a href='https://coldstorageb2c.b2clogin.com/coldstorageb2c.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_csui&client_id=e3264cb5-4495-4551-8478-f85357e7800d&nonce=defaultNonce&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&scope=openid&response_type=id_token&prompt=login'>Login</a>
-      
+      {token ? (
+        <div>
+          <h1>Login Successful</h1>
+          <p>Your Token:</p>
+          <textarea
+            readOnly
+            value={token}
+            rows="10"
+            style={{ width: "100%", fontSize: "12px" }}
+          />
+        </div>
+      ) : (
+        <p>Redirecting to login...</p>
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
+
