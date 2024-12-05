@@ -94,17 +94,24 @@
 
 
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const Login = () => {
   const [token, setToken] = useState(null);
+  const params = useParams();
 
   useEffect(() => {
     // Check if `id_token` is present in the URL hash
-    const urlParams = new URLSearchParams(window.location.hash.substring(1));
-    const idToken = urlParams.get("id_token") ||  urlParams.get("code");
-
-    if (idToken) {
-      setToken(idToken);
+    const urlParams = new URLSearchParams(window.location.search);
+    const idToken = urlParams.get("code");
+    const idtoken = params?.code;
+    console.log(idtoken)
+    if (idToken || idtoken) {
+      if(idToken) {
+        setToken(idToken);
+      } else {
+        setToken(idtoken);
+      }
     } else {
       window.location.href =
         "https://coldstorageb2c.b2clogin.com/coldstorageb2c.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_cstest&client_id=868dbdf5-5215-4192-a482-42e1ae3aa835&nonce=defaultNonce&redirect_uri=https%3A%2F%2Fvictorious-glacier-007ebea00.4.azurestaticapps.net%2Fhome&scope=openid&response_type=code&prompt=login&code_challenge_method=S256&code_challenge=1qHl-ZsXvqyFpLVP8P-8Qfy9mtt_LJU-O4BgejxEVKA";
