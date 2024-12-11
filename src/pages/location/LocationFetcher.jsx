@@ -17,13 +17,14 @@ const LocationFetcher = () => {
   const getLocation = async (latitude, longitude) => {
     try {
       const response = await axios.get(
-        `https://coldstoragebackend-cufpfzggavf3cwhh.centralindia-01.azurewebsites.net/reverse-geocode`,
+        `http://localhost:8888/location`,
         {
           params: { latitude, longitude },
         }
       );
-      const address = response?.data?.addresses[0].address;
       console.log("Location Data:", response);
+
+      const address = response?.data?.addresses[0].address;
 
       setLocationData({
         state: address.state,

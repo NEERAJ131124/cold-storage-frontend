@@ -4,6 +4,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { PublicClientApplication } from "@azure/msal-browser";
 import router from "./routes/index";
 import "./index.css";
+import { ThemeProvider } from "./context/ThemeContext";
 
 
 const msalConfig = {
@@ -20,7 +21,9 @@ const pca = new PublicClientApplication(msalConfig);
 const App = () => {
   return (
     //<MsalProvider instance={pca}>
+    <ThemeProvider>
       <RouterProvider router={router} />
+      </ThemeProvider>
     //</MsalProvider>
   );
 };

@@ -13,13 +13,16 @@
     "@azure/msal-browser": "^3.27.0",
     "@azure/msal-react": "^2.2.0",
     "@reduxjs/toolkit": "^2.4.0",
-    "axios": "^1.7.8",
+    "axios": "^1.7.9",
     "azure-maps-control": "^3.5.0",
+    "azure-maps-rest": "^2.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
+    "react-icons": "^5.4.0",
     "react-redux": "^9.1.2",
-    "react-router-dom": "^7.0.1"
+    "react-router-dom": "^7.0.1",
+    "universal-cookie": "^7.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

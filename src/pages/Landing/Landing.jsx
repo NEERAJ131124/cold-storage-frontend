@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
 const LandingPage = () => {
   return (
@@ -30,18 +31,13 @@ const LandingPage = () => {
 
       {/* Call to Action */}
       <footer className="py-10 bg-cyan-600 text-white flex justify-center gap-6">
-        <a
-          href="/register-owner"
+        <NavLink
+          to="/login"
           className="bg-white text-cyan-600 px-4 py-2 rounded-md shadow-lg"
         >
-          Register as Store Owner
-        </a>
-        <a
-          href="/register-customer"
-          className="bg-white text-cyan-600 px-4 py-2 rounded-md shadow-lg"
-        >
-          Register as Customer
-        </a>
+          Login
+        </NavLink>
+      
       </footer>
     </div>
   );

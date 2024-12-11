@@ -1,10 +1,14 @@
 import { createBrowserRouter } from "react-router-dom";
 import LandingPage from "../pages/Landing/Landing";
-import RegisterOwner from "../pages/owners-register/RegisterOwners";
-import RegisterCustomer from "../pages/customer-register/RegisterCustomer";
+// import RegisterOwner from "../pages/owners-register/RegisterOwners";
+// import RegisterCustomer from "../pages/customer-register/RegisterCustomer";
 import CustomerDashboard from "../pages/customer-dashboard/CustomerDashboard";
 import LocationFetcher from "../pages/location/LocationFetcher";
-import Home from "../pages/login/Login";
+// import Home from "../pages/login/Login";
+// import Dashboard from "../pages/dashboard/Dashboard";
+import Ulogin from "../pages/Ulogin";
+import Layout from "../components/Layout";
+import MapPage from "../pages/customer-dashboard/Map";
 
 const router = createBrowserRouter([
   {
@@ -12,25 +16,26 @@ const router = createBrowserRouter([
     element: <LandingPage />,
   },
   {
-    path: "/register-owner",
-    element: <RegisterOwner />,
-  },
-  {
-    path: "/register-customer",
-    element: <RegisterCustomer />,
+    path: "/login",
+    element: <Ulogin />,
   },
   {
     path: "/location",
     element: <LocationFetcher />,
   },
-  // customer dashbaord
   {
-    path: "/customer-dashboard",
-    element: <CustomerDashboard />,
-  },
-  {
-    path:"/home",
-    element:<Home/>
+    path: "/dashboard",
+    element: <Layout />,
+    children: [
+      {
+        path: "home",
+        element: <LocationFetcher />,
+      },
+      {
+        path:"facilities",
+        element: <MapPage />,
+      },
+    ],
   },
   {
     path: "*",

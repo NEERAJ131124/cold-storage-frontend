@@ -94,10 +94,13 @@
 
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import Cookies from "universal-cookie";
 
 const Login = () => {
   const [token, setToken] = useState(null);
+  const navigate = useNavigate();
+  const cookies = new Cookies();
   const params = useParams();
 
   useEffect(() => {
@@ -109,8 +112,12 @@ const Login = () => {
     if (idToken || idtoken) {
       if(idToken) {
         setToken(idToken);
+        cookies.set("loginToken", idToken, { path: "/" });
+        // navigate('/dashboard')
       } else {
         setToken(idtoken);
+        cookies.set("loginToken", idToken, { path: "/" });
+        // navigate('/dashboard')
       }
     } else {
       window.location.href =

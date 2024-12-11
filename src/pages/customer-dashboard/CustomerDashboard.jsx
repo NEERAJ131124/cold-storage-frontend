@@ -1,129 +1,192 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as atlas from "azure-maps-control";
-import stores from "../../data/stores";
+import * as atlasService from "azure-maps-rest";
 
 const azureMapsKey =
   "B4KsuUEC2SiY60gpredNw0zz8IFJvTaKgUBj2WpCAudhNRczlSIuJQQJ99ALAC8vTInNpgzmAAAgAZMP1uvz";
 
+
+const azureMapsClientId = "1e93421d-c61f-4478-acb8-2874a4916fb6";
+const tokenServiceUrl = "https://samples.azuremaps.com/api/GetAzureMapsToken";
+const minSearchInputLength = 3;
+const keyStrokeDelay = 150;
+
 const CustomerDashboard = () => {
-  const mapRef = useRef(null);
-  const markersRef = useRef([]); // To keep track of current markers
-  const [searchPin, setSearchPin] = useState("");
-  const [filteredStores, setFilteredStores] = useState(stores);
+  const [map, setMap] = useState(null);
+  const [datasource, setDatasource] = useState(null);
+  const [popup, setPopup] = useState(null);
+  const [searchInputLength, setSearchInputLength] = useState(0);
+  const [results, setResults] = useState([]);
+  const [centerMapOnResults, setCenterMapOnResults] = useState(false);
 
   useEffect(() => {
-    if (!mapRef.current) {
-      const map = new atlas.Map("mapContainer", {
-        center: [77.209, 28.6139], // Default center: Delhi
-        zoom: 5,
+    const initializeMap = async () => {
+      const getToken = async () => {
+        const response = await fetch(tokenServiceUrl);
+        if (response.ok) {
+          return response.text();
+        }
+        throw new Error("Failed to retrieve Azure Maps token.");
+      };
+
+      const token = await getToken();
+
+      const mapInstance = new atlas.Map("myMap", {
+        center: [-118.270293, 34.039737],
+        zoom: 14,
         view: "Auto",
         authOptions: {
-          authType: atlas.AuthenticationType.subscriptionKey,
-          subscriptionKey: azureMapsKey,
+          authType: "anonymous",
+          clientId: azureMapsClientId,
+          token: token,
         },
       });
 
-      mapRef.current = map;
+      const datasourceInstance = new atlas.source.DataSource();
+      mapInstance.sources.add(datasourceInstance);
 
-      // Initialize markers for all stores
-      updateMarkers(stores);
-    }
-  }, []);
+      const popupInstance = new atlas.Popup();
 
-  const updateMarkers = (storeList) => {
-    if (mapRef.current) {
-      // Clear existing markers
-      markersRef.current.forEach((marker) =>
-        mapRef.current.markers.remove(marker)
-      );
-      markersRef.current = [];
-
-      // Add new markers for the filtered store list
-      storeList.forEach((store) => {
-        const marker = new atlas.HtmlMarker({
-          position: [store.longitude, store.latitude],
-          htmlContent: `<div class="pin" style="background: #0078D4; width: 10px; height: 10px; border-radius: 50%;"></div>`,
+      mapInstance.events.add("ready", () => {
+        mapInstance.controls.add(new atlas.control.ZoomControl(), {
+          position: "top-right",
         });
 
-        mapRef.current.markers.add(marker);
-        markersRef.current.push(marker);
+        const searchLayer = new atlas.layer.SymbolLayer(datasourceInstance, null, {
+          iconOptions: {
+            image: "pin-round-darkblue",
+            anchor: "center",
+            allowOverlap: true,
+          },
+        });
+        mapInstance.layers.add(searchLayer);
+
+        mapInstance.events.add("click", searchLayer, (e) => {
+          if (e.shapes && e.shapes.length > 0) {
+            showPopup(e.shapes[0]);
+          }
+        });
       });
 
-      // Adjust the map view to fit the markers
-      if (storeList.length > 0) {
-        const positions = storeList.map((store) => [
-          store.longitude,
-          store.latitude,
-        ]);
-        mapRef.current.setCamera({
-          bounds: atlas.data.BoundingBox.fromPositions(positions),
-          padding: 20,
-        });
-      }
+      setMap(mapInstance);
+      setDatasource(datasourceInstance);
+      setPopup(popupInstance);
+    };
+
+    initializeMap();
+  }, []);
+
+  const handleSearchInput = (e) => {
+    const input = e.target.value;
+    setCenterMapOnResults(e.keyCode === 13);
+
+    if (input.length >= minSearchInputLength) {
+      setTimeout(() => {
+        if (input.length === searchInputLength) {
+          search(input);
+        }
+      }, keyStrokeDelay);
+    } else {
+      setResults([]);
     }
+    setSearchInputLength(input.length);
   };
 
-  const handleSearch = () => {
-    const results = stores.filter((store) =>
-      store.pincode.startsWith(searchPin)
+  const search = async (query) => {
+    datasource.clear();
+    popup.close();
+    setResults([]);
+
+    const pipeline = atlasService.MapsURL.newPipeline(
+      new atlasService.MapControlCredential(map)
     );
-    setFilteredStores(results);
-    updateMarkers(results); // Update markers on the map
+    const searchURL = new atlasService.SearchURL(pipeline);
+
+    const results = await searchURL.searchPOI(atlasService.Aborter.timeout(10000), query, {
+      lon: map.getCamera().center[0],
+      lat: map.getCamera().center[1],
+      maxFuzzyLevel: 4,
+      view: "Auto",
+    });
+
+    const data = results.geojson.getFeatures();
+    datasource.add(data);
+
+    if (centerMapOnResults) {
+      map.setCamera({ bounds: data.bbox });
+    }
+    setResults(data.features);
   };
+
+  const showPopup = (shape) => {
+    const properties = shape.getProperties();
+    const content = `
+      <div style="max-width: 200px;">
+        <div style="background-color: #153C64; color: #fff; padding: 8px; font-weight: bold; border-radius: 4px;">
+          ${properties.poi?.name || properties.address.freeformAddress}
+        </div>
+        <div style="padding: 8px;">
+          <div>${properties.address.freeformAddress}</div>
+          ${properties.poi?.phone ? `<div>${properties.poi.phone}</div>` : ""}
+          ${properties.poi?.url ? `<div><a href="http://${properties.poi.url}" target="_blank">Visit</a></div>` : ""}
+        </div>
+      </div>`;
+    popup.setOptions({
+      position: shape.getCoordinates(),
+      content: content,
+    });
+    popup.open(map);
+  };
+
+  const itemHovered = (id) => {
+    const shape = datasource.getShapeById(id);
+    showPopup(shape);
+  };
+
+  const itemClicked = (id) => {
+    const shape = datasource.getShapeById(id);
+    map.setCamera({
+      center: shape.getCoordinates(),
+      zoom: 17,
+    });
+  };
+
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Customer Dashboard</h2>
-
-        {/* Search Bar */}
-        <div className="flex items-center mb-6">
+    <div className="relative w-full h-screen">
+      <div
+        id="myMap"
+        className="absolute w-full h-full"
+      ></div>
+      <div
+        id="search"
+        className="absolute top-0 left-0 w-96 bg-white shadow-lg border border-gray-200 overflow-hidden"
+      >
+        <div className="flex items-center p-4 border-b">
           <input
+            id="search-input"
             type="text"
-            placeholder="Enter your PIN code"
-            value={searchPin}
-            onChange={(e) => setSearchPin(e.target.value)}
-            className="border rounded-md p-2 flex-grow mr-4 focus:ring focus:ring-blue-200"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none"
+            placeholder="Search"
+            onKeyUp={handleSearchInput}
           />
-          <button
-            onClick={handleSearch}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-          >
-            Search
-          </button>
         </div>
-
-        {/* Store List */}
-        <div className="overflow-x-auto">
-          <table className="table-auto w-full text-left border border-collapse">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border px-4 py-2">Store Name</th>
-                <th className="border px-4 py-2">Address</th>
-                <th className="border px-4 py-2">City</th>
-                <th className="border px-4 py-2">State</th>
-                <th className="border px-4 py-2">PIN Code</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStores.map((store) => (
-                <tr key={store.id} className="hover:bg-gray-100">
-                  <td className="border px-4 py-2">{store.name}</td>
-                  <td className="border px-4 py-2">{store.address}</td>
-                  <td className="border px-4 py-2">{store.city}</td>
-                  <td className="border px-4 py-2">{store.state}</td>
-                  <td className="border px-4 py-2">{store.pincode}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Map Section */}
-      <div className="mt-8 bg-white shadow-lg rounded-lg p-6">
-        <h3 className="text-xl font-bold mb-4">Nearby Stores</h3>
-        <div id="mapContainer" style={{ height: "400px", width: "100%" }}></div>
+        <ul
+          id="results-panel"
+          className="overflow-y-auto max-h-[calc(100vh-120px)] text-sm"
+        >
+          {results.map((result) => (
+            <li
+              key={result.id}
+              onClick={() => itemClicked(result.id)}
+              onMouseOver={() => itemHovered(result.id)}
+              className="p-2 border-t hover:bg-gray-100 cursor-pointer"
+            >
+              <div className="font-bold">{result.properties.poi?.name || result.properties.address.freeformAddress}</div>
+              <div className="text-gray-500">{result.properties.address.freeformAddress}</div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
